@@ -1,4 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded.");
+
+  const requiredElements = [
+    'main-menu', 'game-screen', 'note-buttons-container', 'prompt',
+    'play-reference', 'play-scale', 'replay-note', 'next-button',
+    'reset-score', 'back-button', 'display-notes', 'display-degrees',
+    'scale-label', 'octave-label', 'correct-count', 'incorrect-count',
+    'total-count', 'accuracy', 'add-note', 'remove-note'
+  ];
+
+  requiredElements.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) {
+      console.error(`Missing element: #${id}`);
+    }
+  });
+});
 const startScreen = document.getElementById('main-menu');
 const gameScreen = document.getElementById('game-screen');
 const noteButtonsContainer = document.getElementById('note-buttons-container');
