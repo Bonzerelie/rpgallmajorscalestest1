@@ -233,3 +233,20 @@ removeNoteBtn.addEventListener('click', () => {
     loadNewNote();
   }
 });
+
+// Enable scale selection buttons from the main menu
+document.querySelectorAll('.scale-select').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const scale = btn.getAttribute('data-scale');
+    if (scale === 'D') {
+      // Proceed with existing D major logic
+      startScreen.classList.add('hidden');
+      gameScreen.classList.remove('hidden');
+      resetScore();
+      toggleDisplay('notes');
+      loadNewNote();
+    } else {
+      alert(`The ${scale} Major version is not yet implemented. Only D Major works in this version.`);
+    }
+  });
+});
