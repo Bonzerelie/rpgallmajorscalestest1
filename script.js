@@ -1,165 +1,147 @@
+// Fixed script.js with all sharp/flat keys quoted
+
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded.");
+  const startScreen = document.getElementById('main-menu');
+  const gameScreen = document.getElementById('game-screen');
+  const noteButtonsContainer = document.getElementById('note-buttons-container');
+  const promptText = document.getElementById('prompt');
+  const playRefBtn = document.getElementById('play-reference');
+  const playScaleBtn = document.getElementById('play-scale');
+  const replayNoteBtn = document.getElementById('replay-note');
+  const nextBtn = document.getElementById('next-button');
+  const resetScoreBtn = document.getElementById('reset-score');
+  const backButton = document.getElementById('back-button');
+  const displayNotesBtn = document.getElementById('display-notes');
+  const displayDegreesBtn = document.getElementById('display-degrees');
+  const scaleLabel = document.getElementById('scale-label');
+  const octaveLabel = document.getElementById('octave-label');
+  const correctCount = document.getElementById('correct-count');
+  const incorrectCount = document.getElementById('incorrect-count');
+  const totalCount = document.getElementById('total-count');
+  const accuracyDisplay = document.getElementById('accuracy');
+  const addNoteBtn = document.getElementById('add-note');
+  const removeNoteBtn = document.getElementById('remove-note');
 
-  const requiredElements = [
-    'main-menu', 'game-screen', 'note-buttons-container', 'prompt',
-    'play-reference', 'play-scale', 'replay-note', 'next-button',
-    'reset-score', 'back-button', 'display-notes', 'display-degrees',
-    'scale-label', 'octave-label', 'correct-count', 'incorrect-count',
-    'total-count', 'accuracy', 'add-note', 'remove-note'
-  ];
+  let audio = new Audio();
+  let correct = 0;
+  let incorrect = 0;
+  let isAnswered = false;
+  let showDegrees = false;
+  let currentMode = 8;
+  let currentNotes = [];
+  let currentNote = '';
+  let currentScale = '';
 
-  requiredElements.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) {
-      console.error(`Missing element: #${id}`);
+  const scaleData = {
+    "C": {
+      noteMap: { "C": ['c4', 'c5'], "D": ['d4'], "E": ['e4'], "F": ['f4'], "G": ['g4'], "A": ['a4'], "B": ['b4'] },
+      degreeMap: { "C": '1st', "D": '2nd', "E": '3rd', "F": '4th', "G": '5th', "A": '6th', "B": '7th' },
+      noteOrder: ["C", "D", "E", "F", "G", "A", "B"],
+      referenceNote: 'c4',
+      scaleAudio: 'cmajorscale',
+      label: 'C Major Scale (Ionian Mode)',
+      octave: 'One Octave (Notes C4–C5)'
+    },
+    "G": {
+      noteMap: { "G": ['g3'], "A": ['a3'], "B": ['b3'], "C": ['c4'], "D": ['d4'], "E": ['e4'], "F#": ['f#4'] },
+      degreeMap: { "G": '1st', "A": '2nd', "B": '3rd', "C": '4th', "D": '5th', "E": '6th', "F#": '7th' },
+      noteOrder: ["G", "A", "B", "C", "D", "E", "F#"],
+      referenceNote: 'g3',
+      scaleAudio: 'gmajorscale',
+      label: 'G Major Scale (Ionian Mode)',
+      octave: 'Notes G3–G4'
+    },
+    "D": {
+      noteMap: { "D": ['d3', 'd4'], "E": ['e3'], "F#": ['f#3'], "G": ['g3'], "A": ['a3'], "B": ['b3'], "C#": ['c#4'] },
+      degreeMap: { "D": '1st', "E": '2nd', "F#": '3rd', "G": '4th', "A": '5th', "B": '6th', "C#": '7th' },
+      noteOrder: ["D", "E", "F#", "G", "A", "B", "C#"],
+      referenceNote: 'd3',
+      scaleAudio: 'dmajorscale',
+      label: 'D Major Scale (Ionian Mode)',
+      octave: 'Notes D3–D4'
+    },
+    "A": {
+      noteMap: { "A": ['a3'], "B": ['b3'], "C#": ['c#4'], "D": ['d4'], "E": ['e4'], "F#": ['f#4'], "G#": ['g#4'] },
+      degreeMap: { "A": '1st', "B": '2nd', "C#": '3rd', "D": '4th', "E": '5th', "F#": '6th', "G#": '7th' },
+      noteOrder: ["A", "B", "C#", "D", "E", "F#", "G#"],
+      referenceNote: 'a3',
+      scaleAudio: 'amajorscale',
+      label: 'A Major Scale (Ionian Mode)',
+      octave: 'Notes A3–A4'
+    },
+    "E": {
+      noteMap: { "E": ['e3'], "F#": ['f#3'], "G#": ['g#3'], "A": ['a3'], "B": ['b3'], "C#": ['c#4'], "D#": ['d#4'] },
+      degreeMap: { "E": '1st', "F#": '2nd', "G#": '3rd', "A": '4th', "B": '5th', "C#": '6th', "D#": '7th' },
+      noteOrder: ["E", "F#", "G#", "A", "B", "C#", "D#"],
+      referenceNote: 'e3',
+      scaleAudio: 'emajorscale',
+      label: 'E Major Scale (Ionian Mode)',
+      octave: 'Notes E3–E4'
+    },
+    "F": {
+      noteMap: { "F": ['f3'], "G": ['g3'], "A": ['a3'], "Bb": ['a#3'], "C": ['c4'], "D": ['d4'], "E": ['e4'] },
+      degreeMap: { "F": '1st', "G": '2nd', "A": '3rd', "Bb": '4th', "C": '5th', "D": '6th', "E": '7th' },
+      noteOrder: ["F", "G", "A", "Bb", "C", "D", "E"],
+      referenceNote: 'f3',
+      scaleAudio: 'fmajorscale',
+      label: 'F Major Scale (Ionian Mode)',
+      octave: 'Notes F3–F4'
+    },
+    "Bb": {
+      noteMap: { "Bb": ['a#3'], "C": ['c4'], "D": ['d4'], "Eb": ['d#4'], "F": ['f4'], "G": ['g4'], "A": ['a4'] },
+      degreeMap: { "Bb": '1st', "C": '2nd', "D": '3rd', "Eb": '4th', "F": '5th', "G": '6th', "A": '7th' },
+      noteOrder: ["Bb", "C", "D", "Eb", "F", "G", "A"],
+      referenceNote: 'a#3',
+      scaleAudio: 'bbmajorscale',
+      label: 'Bb Major Scale (Ionian Mode)',
+      octave: 'Notes Bb3–Bb4'
+    },
+    "Eb": {
+      noteMap: { "Eb": ['d#3'], "F": ['f3'], "G": ['g3'], "Ab": ['g#3'], "Bb": ['a#3'], "C": ['c4'], "D": ['d4'] },
+      degreeMap: { "Eb": '1st', "F": '2nd', "G": '3rd', "Ab": '4th', "Bb": '5th', "C": '6th', "D": '7th' },
+      noteOrder: ["Eb", "F", "G", "Ab", "Bb", "C", "D"],
+      referenceNote: 'd#3',
+      scaleAudio: 'ebmajorscale',
+      label: 'Eb Major Scale (Ionian Mode)',
+      octave: 'Notes Eb3–Eb4'
+    },
+    "Ab": {
+      noteMap: { "Ab": ['g#3'], "Bb": ['a#3'], "C": ['c4'], "Db": ['c#4'], "Eb": ['d#4'], "F": ['f4'], "G": ['g4'] },
+      degreeMap: { "Ab": '1st', "Bb": '2nd', "C": '3rd', "Db": '4th', "Eb": '5th', "F": '6th', "G": '7th' },
+      noteOrder: ["Ab", "Bb", "C", "Db", "Eb", "F", "G"],
+      referenceNote: 'g#3',
+      scaleAudio: 'abmajorscale',
+      label: 'Ab Major Scale (Ionian Mode)',
+      octave: 'Notes Ab3–Ab4'
+    },
+    "B": {
+      noteMap: { "B": ['b3'], "C#": ['c#4'], "D#": ['d#4'], "E": ['e4'], "F#": ['f#4'], "G#": ['g#4'], "A#": ['a#4'] },
+      degreeMap: { "B": '1st', "C#": '2nd', "D#": '3rd', "E": '4th', "F#": '5th', "G#": '6th', "A#": '7th' },
+      noteOrder: ["B", "C#", "D#", "E", "F#", "G#", "A#"],
+      referenceNote: 'b3',
+      scaleAudio: 'bmajorscale',
+      label: 'B Major Scale (Ionian Mode)',
+      octave: 'Notes B3–B4'
+    },
+    "F#": {
+      noteMap: { "F#": ['f#3'], "G#": ['g#3'], "A#": ['a#3'], "B": ['b3'], "C#": ['c#4'], "D#": ['d#4'], "E#": ['f4'] },
+      degreeMap: { "F#": '1st', "G#": '2nd', "A#": '3rd', "B": '4th', "C#": '5th', "D#": '6th', "E#": '7th' },
+      noteOrder: ["F#", "G#", "A#", "B", "C#", "D#", "E#"],
+      referenceNote: 'f#3',
+      scaleAudio: 'fsharpmajorscale',
+      label: 'F# Major Scale (Ionian Mode)',
+      octave: 'Notes F#3–F#4'
+    },
+    "C#": {
+      noteMap: { "C#": ['c#3', 'c#4'], "D#": ['d#3'], "E#": ['f3'], "F#": ['f#3'], "G#": ['g#3'], "A#": ['a#3'], "B#": ['c4'] },
+      degreeMap: { "C#": '1st', "D#": '2nd', "E#": '3rd', "F#": '4th', "G#": '5th', "A#": '6th', "B#": '7th' },
+      noteOrder: ["C#", "D#", "E#", "F#", "G#", "A#", "B#"],
+      referenceNote: 'c#3',
+      scaleAudio: 'csharpmajorscale',
+      label: 'C# Major Scale (Ionian Mode)',
+      octave: 'Notes C#3–C#4'
     }
-  });
-});
-const startScreen = document.getElementById('main-menu');
-const gameScreen = document.getElementById('game-screen');
-const noteButtonsContainer = document.getElementById('note-buttons-container');
-const promptText = document.getElementById('prompt');
-const playRefBtn = document.getElementById('play-reference');
-const playScaleBtn = document.getElementById('play-scale');
-const replayNoteBtn = document.getElementById('replay-note');
-const nextBtn = document.getElementById('next-button');
-const resetScoreBtn = document.getElementById('reset-score');
-const backButton = document.getElementById('back-button');
-const displayNotesBtn = document.getElementById('display-notes');
-const displayDegreesBtn = document.getElementById('display-degrees');
-const scaleLabel = document.getElementById('scale-label');
-const octaveLabel = document.getElementById('octave-label');
-const correctCount = document.getElementById('correct-count');
-const incorrectCount = document.getElementById('incorrect-count');
-const totalCount = document.getElementById('total-count');
-const accuracyDisplay = document.getElementById('accuracy');
-const addNoteBtn = document.getElementById('add-note');
-const removeNoteBtn = document.getElementById('remove-note');
-
-let audio = new Audio();
-let correct = 0;
-let incorrect = 0;
-let isAnswered = false;
-let showDegrees = false;
-let currentMode = 8;
-let currentNotes = [];
-let currentNote = '';
-let currentScale = '';
-
-const scaleData = {
-  'C': {
-    noteMap: { C: ['c4', 'c5'], D: ['d4'], E: ['e4'], F: ['f4'], G: ['g4'], A: ['a4'], B: ['b4'] },
-    degreeMap: { C: '1st', D: '2nd', E: '3rd', F: '4th', G: '5th', A: '6th', B: '7th' },
-    noteOrder: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-    referenceNote: 'c4',
-    scaleAudio: 'cmajorscale',
-    label: 'C Major Scale (Ionian Mode)',
-    octave: 'One Octave (Notes C4–C5)'
-  },
-  'G': {
-    noteMap: { G: ['g3'], A: ['a3'], B: ['b3'], C: ['c4'], D: ['d4'], E: ['e4'], F#: ['f#4'] },
-    degreeMap: { G: '1st', A: '2nd', B: '3rd', C: '4th', D: '5th', E: '6th', F#: '7th' },
-    noteOrder: ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
-    referenceNote: 'g3',
-    scaleAudio: 'gmajorscale',
-    label: 'G Major Scale (Ionian Mode)',
-    octave: 'Notes G3–G4'
-  },
-  'D': {
-    noteMap: { D: ['d3', 'd4'], E: ['e3'], F#: ['f#3'], G: ['g3'], A: ['a3'], B: ['b3'], C#: ['c#4'] },
-    degreeMap: { D: '1st', E: '2nd', F#: '3rd', G: '4th', A: '5th', B: '6th', C#: '7th' },
-    noteOrder: ['D', 'E', 'F#', 'G', 'A', 'B', 'C#'],
-    referenceNote: 'd3',
-    scaleAudio: 'dmajorscale',
-    label: 'D Major Scale (Ionian Mode)',
-    octave: 'Notes D3–D4'
-  },
-  'A': {
-    noteMap: { A: ['a3'], B: ['b3'], C#: ['c#4'], D: ['d4'], E: ['e4'], F#: ['f#4'], G#: ['g#4'] },
-    degreeMap: { A: '1st', B: '2nd', C#: '3rd', D: '4th', E: '5th', F#: '6th', G#: '7th' },
-    noteOrder: ['A', 'B', 'C#', 'D', 'E', 'F#', 'G#'],
-    referenceNote: 'a3',
-    scaleAudio: 'amajorscale',
-    label: 'A Major Scale (Ionian Mode)',
-    octave: 'Notes A3–A4'
-  },
-  'E': {
-    noteMap: { E: ['e3'], F#: ['f#3'], G#: ['g#3'], A: ['a3'], B: ['b3'], C#: ['c#4'], D#: ['d#4'] },
-    degreeMap: { E: '1st', F#: '2nd', G#: '3rd', A: '4th', B: '5th', C#: '6th', D#: '7th' },
-    noteOrder: ['E', 'F#', 'G#', 'A', 'B', 'C#', 'D#'],
-    referenceNote: 'e3',
-    scaleAudio: 'emajorscale',
-    label: 'E Major Scale (Ionian Mode)',
-    octave: 'Notes E3–E4'
-  },
-  'F': {
-    noteMap: { F: ['f3'], G: ['g3'], A: ['a3'], Bb: ['a#3'], C: ['c4'], D: ['d4'], E: ['e4'] },
-    degreeMap: { F: '1st', G: '2nd', A: '3rd', Bb: '4th', C: '5th', D: '6th', E: '7th' },
-    noteOrder: ['F', 'G', 'A', 'Bb', 'C', 'D', 'E'],
-    referenceNote: 'f3',
-    scaleAudio: 'fmajorscale',
-    label: 'F Major Scale (Ionian Mode)',
-    octave: 'Notes F3–F4'
-  },
-  'Bb': {
-    noteMap: { Bb: ['a#3'], C: ['c4'], D: ['d4'], Eb: ['d#4'], F: ['f4'], G: ['g4'], A: ['a4'] },
-    degreeMap: { Bb: '1st', C: '2nd', D: '3rd', Eb: '4th', F: '5th', G: '6th', A: '7th' },
-    noteOrder: ['Bb', 'C', 'D', 'Eb', 'F', 'G', 'A'],
-    referenceNote: 'a#3',
-    scaleAudio: 'bbmajorscale',
-    label: 'Bb Major Scale (Ionian Mode)',
-    octave: 'Notes Bb3–Bb4'
-  }
-  // Next part will include Eb, Ab, B, F#, C#
-};
-Object.assign(scaleData, {
-  'Eb': {
-    noteMap: { Eb: ['d#3'], F: ['f3'], G: ['g3'], Ab: ['g#3'], Bb: ['a#3'], C: ['c4'], D: ['d4'] },
-    degreeMap: { Eb: '1st', F: '2nd', G: '3rd', Ab: '4th', Bb: '5th', C: '6th', D: '7th' },
-    noteOrder: ['Eb', 'F', 'G', 'Ab', 'Bb', 'C', 'D'],
-    referenceNote: 'd#3',
-    scaleAudio: 'ebmajorscale',
-    label: 'Eb Major Scale (Ionian Mode)',
-    octave: 'Notes Eb3–Eb4'
-  },
-  'Ab': {
-    noteMap: { Ab: ['g#3'], Bb: ['a#3'], C: ['c4'], Db: ['c#4'], Eb: ['d#4'], F: ['f4'], G: ['g4'] },
-    degreeMap: { Ab: '1st', Bb: '2nd', C: '3rd', Db: '4th', Eb: '5th', F: '6th', G: '7th' },
-    noteOrder: ['Ab', 'Bb', 'C', 'Db', 'Eb', 'F', 'G'],
-    referenceNote: 'g#3',
-    scaleAudio: 'abmajorscale',
-    label: 'Ab Major Scale (Ionian Mode)',
-    octave: 'Notes Ab3–Ab4'
-  },
-  'B': {
-    noteMap: { B: ['b3'], C#: ['c#4'], D#: ['d#4'], E: ['e4'], F#: ['f#4'], G#: ['g#4'], A#: ['a#4'] },
-    degreeMap: { B: '1st', C#: '2nd', D#: '3rd', E: '4th', F#: '5th', G#: '6th', A#: '7th' },
-    noteOrder: ['B', 'C#', 'D#', 'E', 'F#', 'G#', 'A#'],
-    referenceNote: 'b3',
-    scaleAudio: 'bmajorscale',
-    label: 'B Major Scale (Ionian Mode)',
-    octave: 'Notes B3–B4'
-  },
-  'F#': {
-    noteMap: { F#: ['f#3'], G#: ['g#3'], A#: ['a#3'], B: ['b3'], C#: ['c#4'], D#: ['d#4'], E#: ['f4'] },
-    degreeMap: { F#: '1st', G#: '2nd', A#: '3rd', B: '4th', C#: '5th', D#: '6th', E#: '7th' },
-    noteOrder: ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
-    referenceNote: 'f#3',
-    scaleAudio: 'fsharpmajorscale',
-    label: 'F# Major Scale (Ionian Mode)',
-    octave: 'Notes F#3–F#4'
-  },
-  'C#': {
-    noteMap: { C#: ['c#3', 'c#4'], D#: ['d#3'], E#: ['f3'], F#: ['f#3'], G#: ['g#3'], A#: ['a#3'], B#: ['c4'] },
-    degreeMap: { C#: '1st', D#: '2nd', E#: '3rd', F#: '4th', G#: '5th', A#: '6th', B#: '7th' },
-    noteOrder: ['C#', 'D#', 'E#', 'F#', 'G#', 'A#', 'B#'],
-    referenceNote: 'c#3',
-    scaleAudio: 'csharpmajorscale',
-    label: 'C# Major Scale (Ionian Mode)',
-    octave: 'Notes C#3–C#4'
-  }
-});
+  };
 
 // === Core Functions ===
 
