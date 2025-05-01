@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+
 
 const startScreen = document.getElementById('main-menu');
 const gameScreen = document.getElementById('game-screen');
@@ -329,5 +329,4 @@ removeNoteBtn.addEventListener('click', () => {
     toggleDisplay(showDegrees ? 'degrees' : 'notes');
     loadNewNote();
   }
-});
 });
